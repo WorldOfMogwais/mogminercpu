@@ -63,37 +63,6 @@ BOOL WINAPI ConsoleHandler(DWORD);
 #define max(a,b) (a<b ? b : a)
 #endif
 
-// byte swap end to end
-// return number of bytes swapped
-int swap_bytes(uchar *in, int len) {
-    uchar temp;
-    int i;
-
-    for (i = 0; i < len-1; i++, len--) {
-        temp = in[i];
-        in[i] = in[len-1];
-        in[len-1] = temp;
-    }
-
-    return i;
-}
-
-int swap_bytes_2(uchar *in, int len) {
-    uchar temp;
-    int i;
-
-    for (i = 0; i < len-1; i+=2, len-=2) {
-        temp = in[i];
-        in[i] = in[len-2];
-        in[len-2] = temp;
-
-        temp = in[i+1];
-        in[i+1] = in[len-1];
-        in[len-1] = temp;
-    }
-
-    return i;
-}
 
 void ser_string_be2(const char *input, char *output, int len)
 {
@@ -118,8 +87,9 @@ enum algos {
 	ALGO_KECCAK,      /* Keccak (old) */
 	ALGO_KECCAKC,     /* Keccak */
 	ALGO_HEAVY,       /* Heavy */
-	ALGO_NEOSCRYPT,   /* NeoScrypt(128, 2, 1) with Salsa20/20 and ChaCha20/20 */
-	ALGO_QUARK,       /* Quark */
+    ALGO_NEOSCRYPT,   /* NeoScrypt(128, 2, 1) with Salsa20/20 and ChaCha20/20 */
+	ALGO_MOGWAI,      /* Modified endian NeoScrypt */
+    ALGO_QUARK,       /* Quark */
 	ALGO_AXIOM,       /* Shabal 256 Memohash */
 	ALGO_BASTION,
 	ALGO_BLAKE,       /* Blake 256 */
@@ -175,7 +145,8 @@ static const char *algo_names[] = {
 	"keccak",
 	"keccakc",
 	"heavy",
-	"neoscrypt",
+    "neoscrypt",
+	"mogwai",
 	"quark",
 	"axiom",
 	"bastion",
@@ -255,7 +226,7 @@ static int opt_time_limit = 0;
 int opt_timeout = 300;
 static int opt_scantime = 5;
 static const bool opt_time = true;
-static enum algos opt_algo = ALGO_SCRYPT;
+static enum algos opt_algo = ALGO_MOGWAI;
 static int opt_scrypt_n = 1024;
 static int opt_pluck_n = 128;
 static unsigned int opt_nfactor = 6;
@@ -622,7 +593,7 @@ static bool work_decode(const json_t *val, struct work *work)
 	int data_size = 128, target_size = sizeof(work->target);
 	int adata_sz = 32, atarget_sz = ARRAY_SIZE(work->target);
 
-	if (opt_algo == ALGO_DROP || opt_algo == ALGO_NEOSCRYPT || opt_algo == ALGO_ZR5) {
+	if (opt_algo == ALGO_DROP || opt_algo == ALGO_NEOSCRYPT || opt_algo == ALGO_ZR5 || opt_algo == ALGO_MOGWAI) {
 		data_size = 80; target_size = 32;
 		adata_sz = 20;
 		atarget_sz = target_size /  sizeof(uint32_t);
@@ -825,22 +796,6 @@ static bool gbt_work_decode(const json_t *val, struct work *work)
 		goto out;
 	}
 
-            // const char *hexstr;
-            // char hex_r[64];
-            // tmp = json_object_get(val, "previousblockhash");
-            // hexstr = json_string_value(tmp);
-
-            // printf("hexstr:   %s\n", hexstr);
-            // strcpy(hex_r, hexstr);
-            // swap_bytes_2(hex_r, strlen(hex_r));
-            // printf("hexstr_r: %s\n", hex_r);
-
-            // hex2bin((uchar*) prevhash, hex_r, 64);
-
-    // swap endian-ness
-    // swap_bytes((uchar*)prevhash, 32);
-    // ser_string_be2(templ->prevhash_hex, templ->prevhash_be, 8);
-
 	tmp = json_object_get(val, "curtime");
 	if (!tmp || !json_is_integer(tmp)) {
 		applog(LOG_ERR, "JSON invalid curtime");
@@ -1000,18 +955,13 @@ static bool gbt_work_decode(const json_t *val, struct work *work)
 			sha256d(merkle_tree[i], merkle_tree[2*i], 64);
 	}
 
-    // swap endian-ness
-    //swap_bytes((uchar*)merkle_tree, 32);
-
 	/* assemble block header */
 	work->data[0] = swab32(version);
-    //work->data[0] = version;
 	for (i = 0; i < 8; i++)
 		work->data[8 - i] = le32dec(prevhash + i);
 	for (i = 0; i < 8; i++)
 		work->data[9 + i] = be32dec((uint32_t *)merkle_tree[0] + i);
-// for (i = 0; i < 8; i++)   work->data[i+1] = prevhash[i];
-//for (i = 0; i < 8; i++)   work->data[9 + i] = (uint32_t *)merkle_tree[0] + i;
+
 	work->data[17] = swab32(curtime);
 	work->data[18] = le32dec(&bits);
 	memset(work->data + 19, 0x00, 52);
@@ -1035,28 +985,12 @@ static bool gbt_work_decode(const json_t *val, struct work *work)
 		work->workid = strdup(json_string_value(tmp));
 	}
 
-
-    // print work 48 32bits = 48*4 bytes
-    // char workdata[48*4*2 + 1];
-    // bool hex2bin(unsigned char *p, const char *hexstr, size_t len)
-    //hex2bin(*workhex, (const char*)work->data, 48*4);
-// void bin2hex(char *s, const unsigned char *p, size_t len)
-
-// char *abin2hex(const unsigned char *p, size_t len)
-    // workdata = ;
-    //printf("work data:   %s\n", abin2hex((const unsigned char *)work->data, 48*4));
-
-
-    for (i = 0; i < ARRAY_SIZE(work->data); i++)
-         be32enc(work->data + i, work->data[i]);
-
-    // char data_str2[2 * sizeof(work->data) + 1];
-    // bin2hex(data_str2, (unsigned char *)work->data, 80);
-    // printf("work: %.8s %.64s %.64s\n%s\n", data_str2, data_str2 + 8, data_str2 + 8 + 64, work->txs);
-    // printf("work: %.8s\n%.64s\n%.64s\n%.8s\n%.8s\n%.8s\n%s\n", data_str2, data_str2 + 8, data_str2 + 8 + 64, data_str2 + 8+64+64, data_str2 + 8+64+64+8, data_str2 + 8+64+64+8+8, work->txs);
-
-    // printf("work:     %s\n%s\n", data_str2, work->txs);
-
+    // MOGWAI needs endian-swap BEFORE hashing
+    if (opt_algo == ALGO_MOGWAI) {
+        for (i = 0; i < ARRAY_SIZE(work->data); i++) {
+            be32enc(work->data + i, work->data[i]);
+        }
+    }
 
 	rc = true;
 out:
@@ -1154,12 +1088,6 @@ static bool submit_upstream_work(CURL *curl, struct work *work)
 	int i;
 	bool rc = false;
 
-    char data_str[2 * sizeof(work->data) + 1];
-    bin2hex(data_str, (unsigned char *)work->data, 80);
-    // printf("submitwk: %s %s\n", data_str, work->txs);
-    // printf("submitwk: %.8s\n%.64s\n%.64s\n%.8s\n%.8s\n%.8s\n%s\n", data_str, data_str + 8, data_str + 8 + 64, data_str + 8+64+64, data_str + 8+64+64+8, data_str + 8+64+64+8+8, work->txs);
-
-
 	/* pass if the previous hash is not the current previous hash */
 	if (opt_algo != ALGO_SIA && !submit_old && memcmp(&work->data[1], &g_work.data[1], 32)) {
 		if (opt_debug)
@@ -1214,6 +1142,7 @@ static bool submit_upstream_work(CURL *curl, struct work *work)
 				break;
 			case ALGO_DROP:
 			case ALGO_NEOSCRYPT:
+            case ALGO_MOGWAI:
 			case ALGO_ZR5:
 				/* reversed */
 				be32enc(&ntime, work->data[17]);
@@ -1256,12 +1185,13 @@ static bool submit_upstream_work(CURL *curl, struct work *work)
 	} else if (work->txs) { /* gbt */
 
 		char *req;
+		char data_str[2 * sizeof(work->data) + 1];
 
-        // for (i = 0; i < ARRAY_SIZE(work->data); i++)
-		// for (i = 0; i < 1; i++)
-		// 	be32enc(work->data + i, work->data[i]);
-  //       for (i = 17; i < 20; i++)
-  //           be32enc(work->data + i, work->data[i]);
+		if (opt_algo != ALGO_MOGWAI) {
+	        for (i = 0; i < ARRAY_SIZE(work->data); i++) {
+	            be32enc(work->data + i, work->data[i]);
+	        }
+	    }
 		bin2hex(data_str, (unsigned char *)work->data, 80);
 		if (work->workid) {
 			char *params;
@@ -1368,7 +1298,7 @@ static bool submit_upstream_work(CURL *curl, struct work *work)
 			json_decref(val);
 			return true;
 
-		} else if (opt_algo == ALGO_DROP || opt_algo == ALGO_NEOSCRYPT || opt_algo == ALGO_ZR5) {
+		} else if (opt_algo == ALGO_DROP || opt_algo == ALGO_NEOSCRYPT || opt_algo == ALGO_ZR5 || opt_algo == ALGO_MOGWAI) {
 			/* different data size */
 			data_size = 80;
 		} else if (opt_algo == ALGO_DECRED) {
@@ -1391,6 +1321,7 @@ static bool submit_upstream_work(CURL *curl, struct work *work)
 
 		//applog(LOG_WARNING, gw_str);
 
+		// if (allow_getwork) {}
 		/* build JSON-RPC request */
 		snprintf(s, JSON_BUF_LEN,
 			"{\"method\": \"getwork\", \"params\": [\"%s\"], \"id\":4}\r\n", gw_str);
@@ -1869,7 +1800,7 @@ static void stratum_gen_work(struct stratum_ctx *sctx, struct work *work)
 		if (opt_showdiff || opt_max_diff > 0.)
 			calc_network_diff(work);
 
-		if (opt_algo == ALGO_DROP || opt_algo == ALGO_NEOSCRYPT || opt_algo == ALGO_ZR5) {
+		if (opt_algo == ALGO_DROP || opt_algo == ALGO_NEOSCRYPT || opt_algo == ALGO_ZR5 || opt_algo == ALGO_MOGWAI) {
 			/* reversed endian */
 			for (i = 0; i <= 18; i++)
 				work->data[i] = swab32(work->data[i]);
@@ -1890,6 +1821,7 @@ static void stratum_gen_work(struct stratum_ctx *sctx, struct work *work)
 			case ALGO_SCRYPT:
 			case ALGO_SCRYPTJANE:
 			case ALGO_NEOSCRYPT:
+            case ALGO_MOGWAI:
 			case ALGO_PLUCK:
 			case ALGO_YESCRYPT:
 				work_set_target(work, sctx->job.diff / (65536.0 * opt_diff_factor));
@@ -2093,7 +2025,7 @@ static void *miner_thread(void *userdata)
 			while (!jsonrpc_2 && time(NULL) >= g_work_time + 120)
 				sleep(1);
 
-			while (!stratum.job.diff && opt_algo == ALGO_NEOSCRYPT) {
+			while (!stratum.job.diff && (opt_algo == ALGO_NEOSCRYPT || opt_algo == ALGO_MOGWAI)) {
 				applog(LOG_DEBUG, "Waiting for Stratum to set the job difficulty");
 				sleep(1);
 			}
@@ -2207,6 +2139,7 @@ static void *miner_thread(void *userdata)
 		if (max64 <= 0) {
 			switch (opt_algo) {
 			case ALGO_SCRYPT:
+            case ALGO_MOGWAI:
 			case ALGO_NEOSCRYPT:
 				max64 = opt_scrypt_n < 16 ? 0x3ffff : 0x3fffff / opt_scrypt_n;
 				if (opt_nfactor > 3)
@@ -2352,6 +2285,7 @@ static void *miner_thread(void *userdata)
 		case ALGO_MYR_GR:
 			rc = scanhash_myriad(thr_id, &work, max_nonce, &hashes_done);
 			break;
+        case ALGO_MOGWAI:
 		case ALGO_NEOSCRYPT:
 			rc = scanhash_neoscrypt(thr_id, &work, max_nonce, &hashes_done,
 				0x80000020 | (opt_nfactor << 8));
