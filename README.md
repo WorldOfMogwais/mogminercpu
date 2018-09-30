@@ -106,8 +106,8 @@ Usage instructions
 ==================
 Run "mogminercpu --help" to see options.
 
-Solo mining: `mogminercpu -o http://127.0.0.1:17710 -u rpcuser -p "rpcpassword"  --coinbase-addr=MSsj5cXZ52YNAr1Ez4R966FrCJCrTLDtD9`
-Pool mining: `mogminercpu -o stratum+tcp://pool.mogwaicoin.net:4233 -u MSsj5cXZ52YNAr1Ez4R966FrCJCrTLDtD9 -p c=MOG`
+* Solo mining: `mogminercpu -o http://127.0.0.1:17710 -u rpcuser -p "rpcpassword"  --coinbase-addr=MSsj5cXZ52YNAr1Ez4R966FrCJCrTLDtD9`
+* Pool mining: `mogminercpu -o stratum+tcp://pool.mogwaicoin.net:4233 -u MSsj5cXZ52YNAr1Ez4R966FrCJCrTLDtD9 -p c=MOG`
 
 ### Connecting through a proxy
 
