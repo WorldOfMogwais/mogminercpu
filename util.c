@@ -313,7 +313,7 @@ static size_t upload_data_cb(void *ptr, size_t size, size_t nmemb,
 static int seek_data_cb(void *user_data, curl_off_t offset, int origin)
 {
 	struct upload_buffer *ub = (struct upload_buffer *) user_data;
-	
+
 	switch (origin) {
 	case SEEK_SET:
 		ub->pos = (size_t) offset;
@@ -886,7 +886,7 @@ bool fulltest(const uint32_t *hash, const uint32_t *target)
 {
 	int i;
 	bool rc = true;
-	
+
 	for (i = 7; i >= 0; i--) {
 		if (hash[i] > target[i]) {
 			rc = false;
@@ -901,7 +901,7 @@ bool fulltest(const uint32_t *hash, const uint32_t *target)
 	if (opt_debug) {
 		uint32_t hash_be[8], target_be[8];
 		char hash_str[65], target_str[65];
-		
+
 		for (i = 0; i < 8; i++) {
 			be32enc(hash_be + i, hash[7 - i]);
 			be32enc(target_be + i, target[7 - i]);
@@ -923,7 +923,7 @@ void diff_to_target(uint32_t *target, double diff)
 {
 	uint64_t m;
 	int k;
-	
+
 	for (k = 6; k > 0 && diff > 1.0; k--)
 		diff /= 4294967296.0;
 	m = (uint64_t)(4294901760.0 / diff);
@@ -2014,7 +2014,7 @@ static bool stratum_get_version(struct stratum_ctx *sctx, json_t *id)
 	char *s;
 	json_t *val;
 	bool ret;
-	
+
 	if (!id || json_is_null(id))
 		return false;
 
@@ -2039,7 +2039,7 @@ static bool stratum_show_message(struct stratum_ctx *sctx, json_t *id, json_t *p
 	val = json_array_get(params, 0);
 	if (val)
 		applog(LOG_NOTICE, "MESSAGE FROM SERVER: %s", json_string_value(val));
-	
+
 	if (!id || json_is_null(id))
 		return true;
 
@@ -2313,162 +2313,8 @@ void print_hash_tests(void)
 	memset(buf, 0, sizeof(buf));
 	//buf[0] = 1; buf[64] = 2; // for endian tests
 
-	axiomhash(&hash[0], &buf[0]);
-	printpfx("axiom", hash);
-
-	bastionhash(&hash[0], &buf[0]);
-	printpfx("bastion", hash);
-
-	blakehash(&hash[0], &buf[0]);
-	printpfx("blake", hash);
-
-	blakecoinhash(&hash[0], &buf[0]);
-	printpfx("blakecoin", hash);
-
-	blake2s_hash(&hash[0], &buf[0]);
-	printpfx("blake2s", hash);
-
-	bmwhash(&hash[0], &buf[0]);
-	printpfx("bmw", hash);
-
-	c11hash(&hash[0], &buf[0]);
-	printpfx("c11", hash);
-
-	cryptolight_hash(&hash[0], &buf[0], 76);
-	printpfx("cryptolight", hash);
-
-	cryptonight_hash(&hash[0], &buf[0], 76);
-	printpfx("cryptonight", hash);
-
-	decred_hash(&hash[0], &buf[0]);
-	printpfx("decred", hash);
-
-	droplp_hash(&hash[0], &buf[0]);
-	printpfx("drop", hash);
-
-	freshhash(&hash[0], &buf[0], 80);
-	printpfx("fresh", hash);
-
-	groestlhash(&hash[0], &buf[0]);
-	printpfx("groestl", hash);
-
-	heavyhash((uint8_t*) &hash[0], (uint8_t*) &buf[0], 32);
-	printpfx("heavy", hash);
-
-	keccakhash(&hash[0], &buf[0]);
-	printpfx("keccak", hash);
-
-	jha_hash(&hash[0], &buf[0]);
-	printpfx("jha", hash);
-
-	lbry_hash(&hash[0], &buf[0]);
-	printpfx("lbry", hash);
-
-	luffahash(&hash[0], &buf[0]);
-	printpfx("luffa", hash);
-
-	lyra2_hash(&hash[0], &buf[0]);
-	printpfx("lyra2", hash);
-
-	lyra2rev2_hash(&hash[0], &buf[0]);
-	printpfx("lyra2v2", hash);
-
-	myriadhash(&hash[0], &buf[0]);
-	printpfx("myr-gr", hash);
-
 	neoscrypt((uchar*) &hash[0], (uchar*)&buf[0], 80000620);
 	printpfx("neoscrypt", hash);
-
-	nist5hash(&hash[0], &buf[0]);
-	printpfx("nist5", hash);
-
-	pentablakehash(&hash[0], &buf[0]);
-	printpfx("pentablake", hash);
-
-	pluck_hash((uint32_t*)&hash[0], (uint32_t*)&buf[0], scratchbuf, 128);
-	memset(&buf[0], 0, sizeof(buf));
-	printpfx("pluck", hash);
-
-	init_quarkhash_contexts();
-	quarkhash(&hash[0], &buf[0]);
-	printpfx("quark", hash);
-
-	qubithash(&hash[0], &buf[0]);
-	printpfx("qubit", hash);
-
-	scrypthash(&hash[0], &buf[0], 1024);
-	printpfx("scrypt", hash);
-
-	scrypthash(&hash[0], &buf[0], 2048);
-	printpfx("scrypt:2048", hash);
-
-	scryptjanehash(&hash[0], &buf[0], 9);
-	printpfx("scrypt-jane", hash);
-
-	inkhash(&hash[0], &buf[0]);
-	printpfx("shavite3", hash);
-
-	sha256d((uint8_t*) &hash[0], (uint8_t*)&buf[0], 64);
-	printpfx("sha256d", hash);
-
-	blake2b_hash(&hash[0], &buf[0]);
-	printpfx("sia", hash);
-
-	sibhash(&hash[0], &buf[0]);
-	printpfx("sib", hash);
-
-	skeinhash(&hash[0], &buf[0]);
-	printpfx("skein", hash);
-
-	skein2hash(&hash[0], &buf[0]);
-	printpfx("skein2", hash);
-
-	s3hash(&hash[0], &buf[0]);
-	printpfx("s3", hash);
-
-	timetravel_hash(&hash[0], &buf[0]);
-	printpfx("timetravel", hash);
-
-	bitcore_hash(&hash[0], &buf[0]);
-	printpfx("bitcore", hash);
-
-	tribus_hash(&hash[0], &buf[0]);
-	printpfx("tribus", hash);
-
-	veltor_hash(&hash[0], &buf[0]);
-	printpfx("veltor", hash);
-
-	xevan_hash(&hash[0], &buf[0]);
-	printpfx("xevan", hash);
-
-	x11evo_hash(&hash[0], &buf[0]);
-	printpfx("x11evo", hash);
-
-	x11hash(&hash[0], &buf[0]);
-	printpfx("x11", hash);
-
-	x13hash(&hash[0], &buf[0]);
-	printpfx("x13", hash);
-
-	x14hash(&hash[0], &buf[0]);
-	printpfx("x14", hash);
-
-	x15hash(&hash[0], &buf[0]);
-	printpfx("x15", hash);
-
-	x16r_hash(&hash[0], &buf[0]);
-	printpfx("x16r", hash);
-
-	x17hash(&hash[0], &buf[0]);
-	printpfx("x17", hash);
-
-	yescrypthash(&hash[0], &buf[0]);
-	printpfx("yescrypt", hash);
-
-	//zr5hash(&hash[0], &buf[0]);
-	zr5hash(&hash[0], (uint32_t*) &buf[0]);
-	memset(buf, 0, sizeof(buf));
-	printpfx("zr5", hash);
 
 	printf("\n");
 
