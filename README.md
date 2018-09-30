@@ -1,16 +1,21 @@
-CPUMiner-Multi
+Mogminer-CPU
 ==============
 
-[![Build Status](https://travis-ci.org/tpruvot/cpuminer-multi.svg)](https://travis-ci.org/tpruvot/cpuminer-multi)
-
 This is a multi-threaded CPU miner,
+fork of [tpruvot](//github.com/tpruvot)'s cpuminer (see AUTHORS for list of contributors).
 fork of [pooler](//github.com/pooler)'s cpuminer (see AUTHORS for list of contributors).
+Other multi-algos removed.
+
+Mogwai is a modified Neoscrypt algorithm.  This miner also supports Neoscrypt.
+
+In ALGO_MOGWAI, block fields are big-endian encoded prior to hashing.  Grep ALGO_MOGWAI for main changes:
+* cpu-miner.c:798 big-endian encoding after parsing getblocktemplate
+* cpu-miner.c:949 not big-endian encoded after processing, before submitblock
 
 #### Table of contents
 
 * [Algorithms](#algorithms)
 * [Dependencies](#dependencies)
-* [Download](#download)
 * [Build](#build)
 * [Usage instructions](#usage-instructions)
 * [Donations](#donations)
@@ -20,62 +25,8 @@ fork of [pooler](//github.com/pooler)'s cpuminer (see AUTHORS for list of contri
 Algorithms
 ==========
 #### Currently supported
- * ✓ __scrypt__ (Litecoin, Dogecoin, Feathercoin, ...)
- * ✓ __scrypt:N__
- * ✓ __scrypt-jane:N__
- * ✓ __sha256d__ (Bitcoin, Freicoin, Peercoin/PPCoin, Terracoin, ...)
- * ✓ __axiom__ (Axiom Shabal-256 based MemoHash)
- * ✓ __bastion__ (Joincoin [J])
- * ✓ __bitcore__ Permuted serie of 10 algos (BitCore)
- * ✓ __blake__ (Saffron [SFR] Blake-256)
- * ✓ __blake2s__ (NevaCoin Blake2-S 256)
- * ✓ __bmw__ (Midnight [MDT] BMW-256)
- * ✓ __cryptonight__ (Bytecoin [BCN], Monero [XMR])
- * ✓ __cryptonight-light__ (Aeon)
- * ✓ __decred__ (Blake256-14 [DCR])
- * ✓ __dmd-gr__ (Diamond-Groestl)
- * ✓ __fresh__ (FreshCoin)
- * ✓ __groestl__ (Groestlcoin)
- * ✓ __jha__ (JackpotCoin, SweepStake)
- * ✓ __lbry__ (LBRY Credits [LBC])
- * ✓ __lyra2RE__ (Cryptocoin)
- * ✓ __lyra2REv2__ (VertCoin [VTC])
- * ✓ __myr-gr__ Myriad-Groestl (MyriadCoin [MYR])
+ * ✓ __mogwai__ (Mogwai)
  * ✓ __neoscrypt__ (Feathercoin)
- * ✓ __nist5__ (MistCoin [MIC], TalkCoin [TAC], ...)
- * ✓ __pentablake__ (Joincoin)
- * ✓ __pluck__ (Supcoin [SUP])
- * ✓ __quark__ (Quarkcoin)
- * ✓ __qubit__ (GeoCoin)
- * ✓ __skein__ (Skeincoin, Myriadcoin, Xedoscoin, ...)
- * ✓ __skein2__ (Woodcoin)
- * ✓ __s3__ (OneCoin)
- * ✓ __sia__ (Reversed Blake2B for SIA [SC])
- * ✓ __sib__ X11 + gost streebog (SibCoin)
- * ✓ __timetravel__ Permuted serie of 8 algos (MachineCoin [MAC])
- * ✓ __tribus__ 3 of the top NIST5 algos (Denarius [DNR])
- * ✓ __vanilla__ (Blake-256 8-rounds - double sha256 [VNL])
- * ✓ __veltor__ (Veltor [VLT])
- * ✓ __xevan__ x17 x 2 on bigger header (BitSend [BSD])
- * ✓ __x11evo__ (Revolver [XRE])
- * ✓ __x11__ (Darkcoin [DRK], Hirocoin, Limecoin, ...)
- * ✓ __x13__ (Sherlockcoin, [ACE], [B2B], [GRC], [XHC], ...)
- * ✓ __x14__ (X14, Webcoin [WEB])
- * ✓ __x15__ (RadianceCoin [RCE])
- * ✓ __x16r__ (Ravencoin [RVN])
- * ✓ __x17__ (Verge [XVG])
- * ✓ __yescrypt__ (GlobalBoostY [BSTY], Unitus [UIS], MyriadCoin [MYR])
- * ✓ __zr5__ (Ziftrcoin [ZRC])
-
-#### Implemented, but untested
- * ? hefty1 (Heavycoin)
- * ? keccak (Maxcoin  HelixCoin, CryptoMeth, Galleon, 365coin, Slothcoin, BitcointalkCoin)
- * ? keccakc (Creativecoin)
- * ? luffa (Joincoin, Doomcoin)
- * ? shavite3 (INKcoin)
-
-#### Planned support for
- * *scrypt-jane* (YaCoin, CopperBars, Pennies, Tickets, etc..)
  
 Dependencies
 ============
@@ -84,12 +35,6 @@ Dependencies
  * openssl libcrypto https://www.openssl.org/
  * pthreads
  * zlib (for curl/ssl)
-
-Download
-========
- * Windows releases: https://github.com/tpruvot/cpuminer-multi/releases
- * Git tree:   https://github.com/tpruvot/cpuminer-multi
-   * Clone with `git clone https://github.com/tpruvot/cpuminer-multi`
 
 Build
 =====
@@ -159,7 +104,7 @@ _OR_
 
 Usage instructions
 ==================
-Run "cpuminer --help" to see options.
+Run "mogminercpu --help" to see options.
 
 ### Connecting through a proxy
 
@@ -173,7 +118,7 @@ When the --proxy option is not used, the program honors the http_proxy and all_p
 
 Donations
 =========
-Donations for the work done in this fork are accepted :
+Donations for the work done in this fork are accepted by the original authors :
 
 Tanguy Pruvot :
 * BTC: `1FhDPLPpw18X4srecguG3MxJYe4a1JsZnd`
@@ -185,7 +130,7 @@ Lucas Jones :
 Credits
 =======
 CPUMiner-multi was forked from pooler's CPUMiner, and has been started by Lucas Jones.
-* [tpruvot](https://github.com/tpruvot) added all the recent features and newer algorythmns
+* [tpruvot](https://github.com/tpruvot) added all the recent features and newer algorithms
 * [Wolf9466](https://github.com/wolf9466) helped with Intel AES-NI support for CryptoNight
 
 License
